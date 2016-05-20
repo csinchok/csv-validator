@@ -37,10 +37,9 @@ class ValidatedDictReader(csv.DictReader, metaclass=ValidationMetaclass):
 
     def __next__(self):
         row = next(self.reader)
-        self.line_num = self.reader.line_num
 
         # Skip the first row if it's headers...
-        if self.line_num == 1 and row == self.fieldnames:
+        if self.line_num == 0 and row == self.fieldnames:
             row = next(self.reader)
 
         # unlike the basic reader, we prefer not to return blanks,
@@ -69,5 +68,7 @@ class ValidatedDictReader(csv.DictReader, metaclass=ValidationMetaclass):
                     self.errors[self.line_num] = {'data': row, 'errors': {}}
 
                 self.errors[self.line_num]['errors'][name] = str(e)
+
+        self.line_num = self.reader.line_num
 
         return d
