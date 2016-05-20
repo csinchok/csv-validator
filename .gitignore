@@ -1,0 +1,7 @@
+*.py[co]
+__pycache__
+
+/bin
+/lib
+/include
+pyvenv.cfg
