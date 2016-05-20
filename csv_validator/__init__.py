@@ -2,9 +2,10 @@ import csv
 import collections
 
 from .fields import Field
+from .exceptions import ValidationError
 
 
-class OrderedMetaclass(type):
+class ValidationMetaclass(type):
 
     @classmethod
     def __prepare__(self, name, bases):
@@ -22,7 +23,13 @@ class OrderedMetaclass(type):
         return subclass
 
 
-class ValidatedDictReader(csv.DictReader, metaclass=OrderedMetaclass):
+class ValidatedDictReader(csv.DictReader, metaclass=ValidationMetaclass):
+
+    def __init__(self, *args, capture_errors=False, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.capture_errors = capture_errors
+        self.errors = {}
 
     @property
     def fieldnames(self):
@@ -51,31 +58,16 @@ class ValidatedDictReader(csv.DictReader, metaclass=OrderedMetaclass):
             for key in self.fieldnames[lr:]:
                 d[key] = self.restval
 
-        # lf = len(self.fieldnames)
-        # lr = len(row)
-        # if lf < lr:
-        #     d[self.restkey] = row[lf:]
-        # elif lf > lr:
-        #     for key in self.fieldnames[lr:]:
-        #         d[key] = self.restval
-        # print(d)
         for name, field in self._fields.items():
             try:
                 d[name] = field.to_python(d[name])
-            except KeyError as e:
-                print(data)
-                raise e
+            except ValidationError as e:
+                if not self.capture_errors:
+                    raise e
+
+                if self.line_num not in self.errors:
+                    self.errors[self.line_num] = {'data': row, 'errors': {}}
+
+                self.errors[self.line_num]['errors'][name] = str(e)
 
         return d
-
-    # def __init__(self, f, *args, **kwargs):
-    #     fieldnames = []
-    #     for key, value in self.__dict__.items():
-    #         print(key, value)
-    #         if isinstance(value, Field):
-    #             value.name = key
-    #             fieldnames.append(key)
-
-    #     print(fieldnames)
-
-    #     super().__init__(f, fieldnames=fieldnames, *args, **kwargs)

@@ -2,8 +2,8 @@ import datetime
 import io
 from unittest import TestCase
 
-from . import ValidatedDictReader
-from . import fields
+from .. import ValidatedDictReader
+from .. import fields
 
 TEST_FILE_HEADERS = """foo,bar
 1,02/01/2016

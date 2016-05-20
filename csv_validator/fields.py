@@ -6,16 +6,16 @@ from .exceptions import ValidationError
 
 class Field:
 
-    def __init__(self, regex=None, null=True, *args, **kwargs):
+    def __init__(self, regex=None, blank=True, *args, **kwargs):
         self.regex = regex
-        self.null = null
+        self.blank = blank
 
     def to_python(self, value):
-        if not self.null and not value:
-            raise ValidationError('Field may not be null')
+        if not self.blank and not value:
+            raise ValidationError('Field may not be blank')
 
         if self.regex and not re.match(self.regex, value):
-            raise ValidationError('doesn\'t match "{}"'.format(
+            raise ValidationError('Doesn\'t match "{}"'.format(
                 self.regex
             ))
 
@@ -36,7 +36,7 @@ class DateField(Field):
             except (ValueError, TypeError):
                 continue
         if value:
-            raise ValidationError('invalid date format')
+            raise ValidationError('Invalid date format')
 
 
 class IntegerField(Field):
@@ -47,7 +47,7 @@ class IntegerField(Field):
             return int(value)
         except ValueError:
             if value:
-                raise ValidationError('must be an int')
+                raise ValidationError('Must be an int')
 
 
 class FloatField(Field):
@@ -58,4 +58,4 @@ class FloatField(Field):
             return float(value)
         except ValueError:
             if value:
-                raise ValidationError('must be a float')
+                raise ValidationError('Must be a float')
