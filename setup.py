@@ -7,6 +7,6 @@ setup(
     name='csv-validator',
     version='0.1',
     url='https://github.com/csinchok/csv-validator',
-    py_modules=['csv_validator'],
+    packages=['csv_validator'],
     test_suite='tests',
 )
