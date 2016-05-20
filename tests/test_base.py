@@ -2,8 +2,8 @@ import datetime
 import io
 from unittest import TestCase
 
-from .. import ValidatedDictReader
-from .. import fields
+from csv_validator import DictReader
+from csv_validator import fields
 
 TEST_FILE_HEADERS = """foo,bar
 1,02/01/2016
@@ -38,7 +38,7 @@ TEST_FILE_MISSING_DATA = """,02/01/2016
 """
 
 
-class SampleReader(ValidatedDictReader):
+class SampleReader(DictReader):
 
     foo = fields.IntegerField()
     bar = fields.DateField()

@@ -1,13 +1,12 @@
-import datetime
 import io
 from unittest import TestCase
 
-from .. import ValidatedDictReader
-from .. import fields
-from ..exceptions import ValidationError
+from csv_validator import DictReader
+from csv_validator import fields
+from csv_validator.exceptions import ValidationError
 
 
-class SampleReader(ValidatedDictReader):
+class SampleReader(DictReader):
 
     foo = fields.IntegerField(blank=False)
     bar = fields.DateField()

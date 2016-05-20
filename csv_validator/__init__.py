@@ -23,7 +23,7 @@ class ValidationMetaclass(type):
         return subclass
 
 
-class ValidatedDictReader(csv.DictReader, metaclass=ValidationMetaclass):
+class DictReader(csv.DictReader, metaclass=ValidationMetaclass):
 
     def __init__(self, *args, capture_errors=False, **kwargs):
         super().__init__(*args, **kwargs)
