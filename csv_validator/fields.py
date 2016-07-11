@@ -6,9 +6,10 @@ from .exceptions import ValidationError
 
 class Field:
 
-    def __init__(self, regex=None, blank=True, *args, **kwargs):
+    def __init__(self, regex=None, blank=True, index=None, *args, **kwargs):
         self.regex = regex
         self.blank = blank
+        self.index = index
 
     def to_python(self, value):
         if not self.blank and not value:

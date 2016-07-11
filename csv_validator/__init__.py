@@ -19,7 +19,17 @@ class ValidationMetaclass(type):
         for key, value in dct.items():
             if isinstance(value, Field):
                 subclass._fields[key] = value
-                subclass._fieldnames.append(key)
+                if value.index is None:
+                    subclass._fieldnames.append(key)
+                else:
+                    extra_count = value.index - len(subclass._fieldnames) + 1
+                    for i in range(extra_count):
+                        index = len(subclass._fieldnames)
+                        fieldname = 'not_captured_{}'.format(index)
+                        subclass._fields[fieldname] = None
+                        subclass._fieldnames.append(fieldname)
+
+                    subclass._fieldnames[value.index] = key
         return subclass
 
 
@@ -58,6 +68,10 @@ class DictReader(csv.DictReader, metaclass=ValidationMetaclass):
                 d[key] = self.restval
 
         for name, field in self._fields.items():
+            if name.startswith('not_captured_'):
+                if name in d:
+                    del d[name]
+                continue
             try:
                 d[name] = field.to_python(d[name])
             except ValidationError as e:
