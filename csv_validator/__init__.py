@@ -56,13 +56,15 @@ class DictReader(csv.DictReader, metaclass=ValidationMetaclass):
             if row == self.fieldnames:
                 row = next(self.reader)
             elif self.fieldnames == []:
-                for fieldname in row:
+                for index, fieldname in enumerate(row):
                     for key, value in self._fields.items():
-                        if value.index == fieldname:
+                        if value and value.index == fieldname:
                             self.__class__._fieldnames.append(key)
                             break
                     else:
-                        raise ValidationError('Can\'t map fieldnames')
+                        fieldname = 'not_captured_{}'.format(index)
+                        self.__class__._fields[fieldname] = None
+                        self.__class__._fieldnames.append(fieldname)
 
                 row = next(self.reader)
 
