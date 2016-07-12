@@ -22,6 +22,9 @@ class ValidationMetaclass(type):
                 if value.index is None:
                     subclass._fieldnames.append(key)
                 else:
+                    if not isinstance(value.index, int):
+                        continue
+
                     extra_count = value.index - len(subclass._fieldnames) + 1
                     for i in range(extra_count):
                         index = len(subclass._fieldnames)
@@ -35,12 +38,11 @@ class ValidationMetaclass(type):
 
 class DictReader(csv.DictReader, metaclass=ValidationMetaclass):
 
-    def __init__(self, *args, capture_errors=False, skip_headers=False, **kwargs):
+    def __init__(self, *args, capture_errors=False, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.capture_errors = capture_errors
         self.errors = {}
-        self.skip_headers = skip_headers
 
     @property
     def fieldnames(self):
@@ -50,8 +52,19 @@ class DictReader(csv.DictReader, metaclass=ValidationMetaclass):
         row = next(self.reader)
 
         # Skip the first row if it's headers...
-        if self.line_num == 0 and (row == self.fieldnames or self.skip_headers):
-            row = next(self.reader)
+        if self.line_num == 0:
+            if row == self.fieldnames:
+                row = next(self.reader)
+            elif self.fieldnames == []:
+                for fieldname in row:
+                    for key, value in self._fields.items():
+                        if value.index == fieldname:
+                            self.__class__._fieldnames.append(key)
+                            break
+                    else:
+                        raise ValidationError('Can\'t map fieldnames')
+
+                row = next(self.reader)
 
         # unlike the basic reader, we prefer not to return blanks,
         # because we will typically wind up with a dict full of None

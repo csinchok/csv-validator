@@ -12,7 +12,7 @@ TEST_FILE_HEADERS = """foo,bar
 4,02/04/2016
 """
 
-TEST_FILE_BAD_HEADERS = """Foosball,Barry
+TEST_FILE_MAPPED_HEADERS = """Foosball,Barry
 1,02/01/2016
 2,02/02/2016
 3,02/03/2016
@@ -51,6 +51,11 @@ class SampleReader(DictReader):
     bar = fields.DateField()
 
 
+class SampleReaderMapped(DictReader):
+    foo = fields.IntegerField(index='Foosball')
+    bar = fields.DateField(index='Barry')
+
+
 class ValidationTestCase(TestCase):
 
     def test_with_headers(self):
@@ -63,9 +68,9 @@ class ValidationTestCase(TestCase):
                 'bar': datetime.date(2016, 2, i + 1)
             })
 
-    def test_with_bad_headers(self):
-        f = io.StringIO(TEST_FILE_HEADERS)
-        reader = SampleReader(f, skip_headers=True)
+    def test_with_mapped_headers(self):
+        f = io.StringIO(TEST_FILE_MAPPED_HEADERS)
+        reader = SampleReaderMapped(f)
 
         for i, row in enumerate(reader):
             self.assertEqual(row, {
