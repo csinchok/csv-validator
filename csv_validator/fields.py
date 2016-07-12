@@ -46,7 +46,7 @@ class IntegerField(Field):
         value = super().to_python(value)
         try:
             return int(value)
-        except ValueError:
+        except (ValueError, TypeError):
             if value:
                 raise ValidationError('Must be an int')
 
@@ -57,6 +57,6 @@ class FloatField(Field):
         value = super().to_python(value)
         try:
             return float(value)
-        except ValueError:
+        except (ValueError, TypeError):
             if value:
                 raise ValidationError('Must be a float')
