@@ -12,6 +12,13 @@ TEST_FILE_HEADERS = """foo,bar
 4,02/04/2016
 """
 
+TEST_FILE_BAD_HEADERS = """Foosball,Barry
+1,02/01/2016
+2,02/02/2016
+3,02/03/2016
+4,02/04/2016
+"""
+
 TEST_FILE_NO_HEADERS = """1,02/01/2016
 2,02/02/2016
 3,02/03/2016
@@ -49,6 +56,16 @@ class ValidationTestCase(TestCase):
     def test_with_headers(self):
         f = io.StringIO(TEST_FILE_HEADERS)
         reader = SampleReader(f)
+
+        for i, row in enumerate(reader):
+            self.assertEqual(row, {
+                'foo': i + 1,
+                'bar': datetime.date(2016, 2, i + 1)
+            })
+
+    def test_with_bad_headers(self):
+        f = io.StringIO(TEST_FILE_HEADERS)
+        reader = SampleReader(f, skip_headers=True)
 
         for i, row in enumerate(reader):
             self.assertEqual(row, {

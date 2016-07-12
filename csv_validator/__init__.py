@@ -35,11 +35,12 @@ class ValidationMetaclass(type):
 
 class DictReader(csv.DictReader, metaclass=ValidationMetaclass):
 
-    def __init__(self, *args, capture_errors=False, **kwargs):
+    def __init__(self, *args, capture_errors=False, skip_headers=False, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.capture_errors = capture_errors
         self.errors = {}
+        self.skip_headers = skip_headers
 
     @property
     def fieldnames(self):
@@ -49,7 +50,7 @@ class DictReader(csv.DictReader, metaclass=ValidationMetaclass):
         row = next(self.reader)
 
         # Skip the first row if it's headers...
-        if self.line_num == 0 and row == self.fieldnames:
+        if self.line_num == 0 and (row == self.fieldnames or self.skip_headers):
             row = next(self.reader)
 
         # unlike the basic reader, we prefer not to return blanks,
