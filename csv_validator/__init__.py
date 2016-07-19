@@ -53,9 +53,7 @@ class DictReader(csv.DictReader, metaclass=ValidationMetaclass):
 
         # Skip the first row if it's headers...
         if self.line_num == 0:
-            if row == self.fieldnames:
-                row = next(self.reader)
-            elif self.fieldnames == []:
+            if self.fieldnames == []:
                 for index, fieldname in enumerate(row):
                     for key, value in self._fields.items():
                         if value and value.index == fieldname:
@@ -67,6 +65,21 @@ class DictReader(csv.DictReader, metaclass=ValidationMetaclass):
                         self.__class__._fieldnames.append(fieldname)
 
                 row = next(self.reader)
+            else:
+                for i, fieldname in enumerate(self.fieldnames):
+
+                    if fieldname.startswith('not_captured'):
+                        continue
+
+                    original_fieldname = self.__class__._fields[fieldname].index
+
+                    if row[i] != original_fieldname:
+                        break
+                else:
+                    row = next(self.reader)
+
+                if self.fieldnames == row:
+                    row = next(self.reader)
 
         # unlike the basic reader, we prefer not to return blanks,
         # because we will typically wind up with a dict full of None

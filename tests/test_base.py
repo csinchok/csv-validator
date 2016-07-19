@@ -78,6 +78,15 @@ class ValidationTestCase(TestCase):
                 'bar': datetime.date(2016, 2, i + 1)
             })
 
+        # Now try again....
+        f = io.StringIO(TEST_FILE_MAPPED_HEADERS)
+        reader = SampleReaderMapped(f)
+        for i, row in enumerate(reader):
+            self.assertEqual(row, {
+                'foo': i + 1,
+                'bar': datetime.date(2016, 2, i + 1)
+            })
+
     def test_without_headers(self):
         f = io.StringIO(TEST_FILE_NO_HEADERS)
         reader = SampleReader(f)
