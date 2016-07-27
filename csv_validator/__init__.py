@@ -38,11 +38,13 @@ class ValidationMetaclass(type):
 
 class DictReader(csv.DictReader, metaclass=ValidationMetaclass):
 
-    def __init__(self, *args, capture_errors=False, **kwargs):
+    def __init__(self, *args, capture_errors=False, error_limit=100, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.capture_errors = capture_errors
         self.errors = {}
+        self.error_count = 0
+        self.error_limit = error_limit
 
     @property
     def fieldnames(self):
@@ -107,10 +109,14 @@ class DictReader(csv.DictReader, metaclass=ValidationMetaclass):
                 if not self.capture_errors:
                     raise e
 
+                if self.error_count >= self.error_limit:
+                    continue
+
                 if self.line_num not in self.errors:
                     self.errors[self.line_num] = {'data': row, 'errors': {}}
 
                 self.errors[self.line_num]['errors'][name] = str(e)
+                self.error_count += 1
 
         self.line_num = self.reader.line_num
 
