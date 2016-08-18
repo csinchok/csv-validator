@@ -44,6 +44,13 @@ TEST_FILE_MISSING_DATA = """,02/01/2016
 ,02/04/2016
 """
 
+TEST_BLANK_LINE = """
+1,02/01/2016
+2,02/02/2016
+3,02/03/2016
+4,02/04/2016
+"""
+
 
 class SampleReader(DictReader):
 
@@ -128,6 +135,15 @@ class ValidationTestCase(TestCase):
                 'bar': datetime.date(2016, 2, i + 1)
             })
 
+    def test_blank_line(self):
+        f = io.StringIO(TEST_BLANK_LINE)
+        reader = SampleReader(f)
+
+        for i, row in enumerate(reader):
+            self.assertEqual(row, {
+                'foo': i + 1,
+                'bar': datetime.date(2016, 2, i + 1)
+            })
 
 class SampleIndexedDictReader(DictReader):
     foo = fields.Field(index=1)

@@ -75,7 +75,7 @@ class DictReader(csv.DictReader, metaclass=ValidationMetaclass):
 
                     original_fieldname = self.__class__._fields[fieldname].index
 
-                    if row[i] != original_fieldname:
+                    if len(row) > i and row[i] != original_fieldname:
                         break
                 else:
                     row = next(self.reader)
