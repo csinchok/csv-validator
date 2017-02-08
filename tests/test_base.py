@@ -160,6 +160,16 @@ what,foo,bs,bar,python,ack,who,what,,,baz
 
 class IndexTestCase(TestCase):
 
+
+    def test_bad_index(self):
+
+        with self.assertRaises(AttributeError):
+            class BadReader(DictReader):
+                foo = fields.Field()
+                bar = fields.Field()
+                baz = fields.Field(index=0)
+
+
     def test_fieldnames(self):
         f = io.StringIO()
         reader = SampleIndexedDictReader(f)

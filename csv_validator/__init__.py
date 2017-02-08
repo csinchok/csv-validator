@@ -24,6 +24,11 @@ class ValidationMetaclass(type):
                 else:
                     if not isinstance(value.index, int):
                         continue
+                    elif value.index < len(subclass._fieldnames):
+
+                        raise AttributeError('Field "{}" has an index that conflicts with "{}"'.format(
+                            key, subclass._fieldnames[value.index]
+                        ))
 
                     extra_count = value.index - len(subclass._fieldnames) + 1
                     for i in range(extra_count):
