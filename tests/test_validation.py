@@ -1,3 +1,4 @@
+import datetime
 import io
 from unittest import TestCase
 
@@ -22,8 +23,8 @@ class ValidationTestCase(TestCase):
         with self.assertRaises(ValidationError) as context:
             reader.__next__()
         self.assertEqual(
-            str(context.exception),
-            'Field may not be blank'
+            context.exception,
+            ValidationError({'foo': 'Field may not be blank'})
         )
 
     def test_regex(self):
@@ -32,8 +33,8 @@ class ValidationTestCase(TestCase):
         with self.assertRaises(ValidationError) as context:
             reader.__next__()
         self.assertEqual(
-            str(context.exception),
-            'Doesn\'t match "[A-Z0-9_]{3,9}"'
+            context.exception,
+            ValidationError({'baz': 'Doesn\'t match "[A-Z0-9_]{3,9}"'})
         )
 
     def test_integer(self):
@@ -43,8 +44,8 @@ class ValidationTestCase(TestCase):
         with self.assertRaises(ValidationError) as context:
             reader.__next__()
         self.assertEqual(
-            str(context.exception),
-            'Must be an int'
+            context.exception,
+            ValidationError({'foo': 'Must be an int'})
         )
 
     def test_date(self):
@@ -54,50 +55,66 @@ class ValidationTestCase(TestCase):
         with self.assertRaises(ValidationError) as context:
             reader.__next__()
         self.assertEqual(
-            str(context.exception),
-            'Invalid date format'
+            context.exception,
+            ValidationError({'bar': 'Invalid date format'})
         )
 
-    def test_capture_errors(self):
-
-        class CapturingReader(DictReader):
-            foo = fields.IntegerField()
-            bar = fields.DateField()
-            baz = fields.Field(regex='[A-Z0-9_]{3,9}')
-
-
+    def test_strict_validation(self):
         f = io.StringIO('\n'.join([
             '1,02/01/2016,foo',
             'X,02/01/2016,FOO',
             '1,02-01-2016,FOO',
-            ',02-01-2016,foo'
+            ',02-01-2016,foo',
+            '66,02/01/1987,BAZ'
         ]))
 
-        reader = CapturingReader(f)
+        reader = SampleReader(f)
 
-        for row in reader:
-            pass
+        with self.assertRaises(ValidationError) as context:
+            next(reader)
+        
+        self.assertEqual(
+            context.exception,
+            ValidationError({'baz': 'Doesn\'t match "[A-Z0-9_]{3,9}"'})
+        )
 
+    def test_capture_errors(self):
+        f = io.StringIO('\n'.join([
+            '1,02/01/2016,foo',
+            'X,02/01/2016,FOO',
+            '1,02-01-2016,FOO',
+            ',02-01-2016,foo',
+            '66,02/01/1987,BAZ'
+        ]))
+
+        reader = SampleReader(f)
+        rows = [d for d in reader.iter_lines(skip_errors=True)]
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(
+            rows,
+            [(4, {'foo': 66, 'bar': datetime.date(1987, 2, 1), 'baz': 'BAZ'})]
+        )
 
         self.assertEqual(
-            reader.errors[0]['errors'],
+            reader.errors[0],
             {
                 'baz': 'Doesn\'t match "[A-Z0-9_]{3,9}"'
             }
         )
 
         self.assertEqual(
-            reader.errors[1]['errors'],
+            reader.errors[1],
             {
                 'foo': 'Must be an int'
             }
         )
 
         self.assertEqual(
-            reader.errors[2]['errors'],
+            reader.errors[2],
             {
                 'bar': 'Invalid date format'
             }
         )
 
-        self.assertEqual(len(reader.errors[3]['errors']), 2)
+        self.assertEqual(len(reader.errors[3]), 3)

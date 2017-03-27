@@ -102,6 +102,7 @@ class DictReader(csv.DictReader, metaclass=ValidationMetaclass):
             for key in self.fieldnames[lr:]:
                 d[key] = self.restval
 
+        error_dict = {}
         for name, field in self._fields.items():
             if name.startswith('not_captured_'):
                 if name in d:
@@ -112,19 +113,38 @@ class DictReader(csv.DictReader, metaclass=ValidationMetaclass):
             except ValidationError as e:
 
                 if field.required:
-                    raise e
+                    error_dict[name] = str(e)
                 else:
                     d[name] = None
 
                 if self.error_count >= self.error_limit:
                     continue
 
-                if self.line_num not in self.errors:
-                    self.errors[self.line_num] = {'data': row, 'errors': {}}
-
-                self.errors[self.line_num]['errors'][name] = str(e)
-                self.error_count += 1
+        if error_dict:
+            raise ValidationError(error_dict)
 
         self.line_num = self.reader.line_num
 
         return d
+
+    def iter_lines(self, skip_errors=False):
+        '''A generator yielding a two-tuple of (line_number, row), where
+        row is a dictionary in the same form as the default iterator'''
+        self.errors = {}
+
+        line_number = 0
+        while True:
+            
+            try:
+                row = next(self)
+            except ValidationError as e:
+                if skip_errors:
+                    self.errors[line_number] = e.error_dict
+                else:
+                    raise
+            except StopIteration:
+                break
+            else:
+                yield line_number, row
+            finally:
+                line_number += 1
