@@ -6,13 +6,16 @@ from .exceptions import ValidationError
 
 class Field:
 
-    def __init__(self, regex=None, blank=True, index=None, *args, **kwargs):
+    def __init__(self, regex=None, index=None, required=False, *args, **kwargs):
         self.regex = regex
-        self.blank = blank
+
+        self.required = required
+        if 'blank' in kwargs:
+            self.required = not kwargs['blank']
         self.index = index
 
     def to_python(self, value):
-        if not self.blank and not value:
+        if self.required and not value:
             raise ValidationError('Field may not be blank')
 
         if self.regex and not re.match(self.regex, value):

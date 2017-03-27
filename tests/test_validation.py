@@ -8,9 +8,9 @@ from csv_validator.exceptions import ValidationError
 
 class SampleReader(DictReader):
 
-    foo = fields.IntegerField(blank=False)
-    bar = fields.DateField()
-    baz = fields.Field(regex='[A-Z0-9_]{3,9}')
+    foo = fields.IntegerField(required=True)
+    bar = fields.DateField(required=True)
+    baz = fields.Field(required=True, regex='[A-Z0-9_]{3,9}')
 
 
 class ValidationTestCase(TestCase):
@@ -60,48 +60,44 @@ class ValidationTestCase(TestCase):
 
     def test_capture_errors(self):
 
+        class CapturingReader(DictReader):
+            foo = fields.IntegerField()
+            bar = fields.DateField()
+            baz = fields.Field(regex='[A-Z0-9_]{3,9}')
+
+
         f = io.StringIO('\n'.join([
-            ',02/01/2016,FOO',
             '1,02/01/2016,foo',
             'X,02/01/2016,FOO',
             '1,02-01-2016,FOO',
             ',02-01-2016,foo'
         ]))
 
-        reader = SampleReader(f, capture_errors=True)
+        reader = CapturingReader(f)
 
         for row in reader:
             pass
 
-        self.assertEqual(
-            reader.errors[0],
-            {
-                'data': ['', '02/01/2016', 'FOO'],
-                'errors': {
-                    'foo': 'Field may not be blank'
-                }
-            }
-        )
 
         self.assertEqual(
-            reader.errors[1]['errors'],
+            reader.errors[0]['errors'],
             {
                 'baz': 'Doesn\'t match "[A-Z0-9_]{3,9}"'
             }
         )
 
         self.assertEqual(
-            reader.errors[2]['errors'],
+            reader.errors[1]['errors'],
             {
                 'foo': 'Must be an int'
             }
         )
 
         self.assertEqual(
-            reader.errors[3]['errors'],
+            reader.errors[2]['errors'],
             {
                 'bar': 'Invalid date format'
             }
         )
 
-        self.assertEqual(len(reader.errors[4]['errors']), 3)
+        self.assertEqual(len(reader.errors[3]['errors']), 2)

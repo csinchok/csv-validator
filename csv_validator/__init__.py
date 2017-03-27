@@ -43,10 +43,9 @@ class ValidationMetaclass(type):
 
 class DictReader(csv.DictReader, metaclass=ValidationMetaclass):
 
-    def __init__(self, *args, capture_errors=False, error_limit=100, **kwargs):
+    def __init__(self, *args, error_limit=100, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.capture_errors = capture_errors
         self.errors = {}
         self.error_count = 0
         self.error_limit = error_limit
@@ -111,8 +110,11 @@ class DictReader(csv.DictReader, metaclass=ValidationMetaclass):
             try:
                 d[name] = field.to_python(d[name])
             except ValidationError as e:
-                if not self.capture_errors:
+
+                if field.required:
                     raise e
+                else:
+                    d[name] = None
 
                 if self.error_count >= self.error_limit:
                     continue
