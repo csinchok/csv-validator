@@ -20,3 +20,6 @@ class ValidationError(Exception):
 
     def __eq__(self, other):
         return isinstance(other, ValidationError) and self.message == other.message
+
+    def __hash__(self):
+        return super().__hash__()
