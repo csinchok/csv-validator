@@ -4,8 +4,11 @@ __pycache__
 
 /bin
 /lib
+/lib64
 /include
 /dist
+/tags
+/share
 pyvenv.cfg
 *.egg-info
 
