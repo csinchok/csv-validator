@@ -61,14 +61,21 @@ class DictReader(csv.DictReader, metaclass=ValidationMetaclass):
         if self.line_num == 0:
             if self.fieldnames == []:
                 for index, fieldname in enumerate(row):
+
+                    mapped = False
                     for key, value in self._fields.items():
                         if value and value.index == fieldname:
                             self.__class__._fieldnames.append(key)
-                            break
-                    else:
+                            mapped = True
+                    
+                    if not mapped:
                         fieldname = 'not_captured_{}'.format(index)
                         self.__class__._fields[fieldname] = None
                         self.__class__._fieldnames.append(fieldname)
+
+                missing = set(self._fields.keys()) - set(self.fieldnames)
+                if missing:
+                    raise ValidationError('Fields missing in header: {}'.format(', '.join(missing)))
 
                 row = next(self.reader)
             else:

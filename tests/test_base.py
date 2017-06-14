@@ -4,6 +4,7 @@ from unittest import TestCase
 
 from csv_validator import DictReader
 from csv_validator import fields
+from csv_validator.exceptions import ValidationError
 
 TEST_FILE_HEADERS = """foo,bar
 1,02/01/2016
@@ -75,6 +76,19 @@ class ValidationTestCase(TestCase):
                 'bar': datetime.date(2016, 2, i + 1)
             })
 
+    def test_multiple_fields_one_col(self):
+        f = io.StringIO(TEST_FILE_HEADERS)
+        reader = SampleReader(f)
+
+        class MultiMappedReader(DictReader):
+
+            foo = fields.IntegerField(index='foo')
+            bar = fields.DateField(index='bar')
+            baz = fields.Field(index='foo')
+
+        reader = MultiMappedReader(f)
+        row = next(reader)
+
     def test_with_mapped_headers(self):
         f = io.StringIO(TEST_FILE_MAPPED_HEADERS)
         reader = SampleReaderMapped(f)
@@ -93,6 +107,22 @@ class ValidationTestCase(TestCase):
                 'foo': i + 1,
                 'bar': datetime.date(2016, 2, i + 1)
             })
+
+    def test_unmapped_headers(self):
+        f = io.StringIO(TEST_FILE_HEADERS)
+
+        class BadHeaderReader(DictReader):
+            foo = fields.IntegerField(index='foo')
+            bar = fields.DateField(index='bar')
+            baz = fields.Field(index='baz')
+
+        reader = BadHeaderReader(f)
+        with self.assertRaises(ValidationError) as context:
+            next(reader)
+        self.assertEqual(
+            context.exception,
+            ValidationError('Fields missing in header: baz')
+        )
 
     def test_without_headers(self):
         f = io.StringIO(TEST_FILE_NO_HEADERS)
